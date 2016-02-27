@@ -62,7 +62,7 @@ for u = 1:nUnits
       plot(autocorrs(u).lags, autocorrs(u).values, 'color', color(u,:), 'LineWidth', 1.5);
     else
       bh = bar(autocorrs(u).lags, autocorrs(u).values);
-      set(bh, 'EdgeColor', color(u,:), 'FaceColor', color(u,:), 'BarWidth', 1);
+      set(bh, 'EdgeColor', color(u,1:3), 'FaceColor', color(u,1:3), 'BarWidth', 1);
     end
     
     % Figure out whether refractory violation text should be gray (OK) or

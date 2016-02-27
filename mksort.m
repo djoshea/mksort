@@ -356,6 +356,7 @@ if isempty(varargin)
     1 0 0;
     0 1 0;
     0.5 0 0.5];
+  handles.sortColors(:, 4) = 0.25; % @djoshea
 
   handles.spacing = 0.01;  % How much margin to leave in each channel, so we avoid the border
 
@@ -1560,7 +1561,7 @@ for u = 1:handles.maxUnits
     waveLen = length(envelope.top);
     x = 0:(waveLen-1);
     x = [x fliplr(x)] / (waveLen-1);
-    fill(x, [envelope.top fliplr(envelope.bottom)], 1-(1-handles.sortColors(u+1, :))/2, 'EdgeColor', 'none');
+    fill(x, [envelope.top fliplr(envelope.bottom)], 1-(1-handles.sortColors(u+1, 1:3))/2, 'EdgeColor', 'none');
   end
 end
 

@@ -294,7 +294,7 @@ handles.defaultEllipseWidth = 2;             % default value for ellipse diamete
 handles.defaultAcceptance = 50;              % default value for unit acceptance sliders
 handles.dragHandleSize = 0.015;              % size for hoop/ellipse drag handles
 handles.redRefracViolThresh = 2;             % percent refractory violations before number turns red on autocorrelation plot
-handles.defaultNWaves = 100;                 % Default # of waves displayed
+handles.defaultNWaves = 1000;                 % Default # of waves displayed
 handles.PCADispMult = 20;                    % one wants to see more points for PCA than for waveforms, this is factor more
 handles.initialZoom = 250;                   % initial zoom voltage (waveform view)
 handles.maxVoltage = 2000;                   % Max waveform plot voltage
@@ -520,6 +520,7 @@ handles.sortColors = [0.5 0.5 0.5;
                       1 0.2 0.2;
                       0.2 1 0.2;
                       0.5 0.2 0.5];
+handles.sortColors(:, 4) = 0.25; % @djoshea
 
 % Color of unit highlight box
 handles.selectColor = [0.7 0.2 0];
@@ -2574,10 +2575,10 @@ for unit = unitsDefined
   end
   
   % Plot
-  plot(uniqueConditions, FR(1:length(uniqueConditions)), '-', 'color', handles.sortColors(unit+1, :), 'LineWidth', 2);
+  plot(uniqueConditions, FR(1:length(uniqueConditions)), '-', 'color', handles.sortColors(unit+1, 1:3), 'LineWidth', 2);
   for dim = 1:nDims
-    plot(uniqueConditions, aboveMed(dim, 1:length(uniqueConditions)), lineStyles{dim}, 'color', handles.sortColors(unit+1, :));
-    plot(uniqueConditions, belowMed(dim, 1:length(uniqueConditions)), lineStyles{dim}, 'color', handles.sortColors(unit+1, :));
+    plot(uniqueConditions, aboveMed(dim, 1:length(uniqueConditions)), lineStyles{dim}, 'color', handles.sortColors(unit+1, 1:3));
+    plot(uniqueConditions, belowMed(dim, 1:length(uniqueConditions)), lineStyles{dim}, 'color', handles.sortColors(unit+1, 1:3));
   end
   
 end
@@ -2631,7 +2632,7 @@ for unit = unitsDefined
     try
       FRCumSum = [0 cumsum(FRs{unit}(condTrials))];
       theseTrials = uniqueTrials(condTrials);
-      color = handles.sortColors(unit+1, :) - colorRand/2 * [1 1 1] + colorRand * rand(1, 3);
+      color = handles.sortColors(unit+1, 1:3) - colorRand/2 * [1 1 1] + colorRand * rand(1, 3);
       color = max(min(color, [1 1 1]), [0 0 0]);
       kern = min(smoothKernel, length(FRCumSum)-1);
       plot(theseTrials(1:end-kern+1), (FRCumSum(kern+1:end) - FRCumSum(1:end-kern))/kern, 'color', color);
@@ -2876,8 +2877,6 @@ switch view
   case 'PCA'
     handles.PCAShown = handles.PCAPts(:, handles.wavesShownIndices);
 end
-
-
 
 function handles = displayMainPlot(handles, view, startPt, endPt)
 activateAxes(gcbf, handles.axWaves);
