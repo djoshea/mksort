@@ -212,6 +212,8 @@ if isempty(w)
   addpath(fullfile(fPath, 'splashScreen'));
 end
 
+set(handles.mnuShowElectrodeNums, 'Checked', 'on');
+
 %--------------------------------------------------------------------------
 
 %--------------------------------------------------------------------------
@@ -222,8 +224,8 @@ end
 % Main GUI options
 
 % Number of rows and columns per screenful
-handles.nRows = 6;
-handles.nCols = 8;
+handles.nRows = 4;
+handles.nCols = 6;
 
 handles.waveMultiplier = 0.001;  % Scales the waveforms
 
@@ -1589,7 +1591,7 @@ end
 if anyUnits
   % Find range for envelopes, scale plot
   if waveLen > 0
-    maxMax = max(abs([waveMin waveMax]));
+    maxMax = double(max(abs([waveMin waveMax])));
     waveMin = -1.1 * maxMax;
     waveMax = 1.1 * maxMax;
     axLims([0 1 waveMin waveMax]);
@@ -1603,7 +1605,7 @@ if anyUnits
   % Print ratings at top of wave envelope plot
   for u = 1:handles.maxUnits
     if ~isempty(sorts.waveEnvelope(u).top)
-      text(ratingXOffset, 1.05 * maxMax, num2str(sorts.maxRatings(u)), 'color', handles.sortColors(u+1, :), 'VerticalAlignment', 'top', 'FontSize', 9);
+      text(ratingXOffset, 1.05 * maxMax, num2str(sorts.maxRatings(u)), 'Color', handles.sortColors(u+1, :), 'VerticalAlignment', 'top', 'FontSize', 9);
       ratingXOffset = ratingXOffset + 0.2;
     end
   end

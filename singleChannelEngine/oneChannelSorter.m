@@ -268,6 +268,10 @@ method.name = 'Post-trough rise';
 method.alignFcn = 'alignOnRiseLinExact';
 handles.alignMethods{end+1} = method;
 
+method.name = 'Initial rise';
+method.alignFcn = 'alignOnFallLinExact';
+handles.alignMethods{end+1} = method;
+
 % Legacy methods
 method.legacy = 1;
 
@@ -1313,7 +1317,8 @@ if ~handles.sortInfo.fullySorted
 end
 
 % Generate the plots
-figure('Name', 'Tuning consistency analysis', 'Position', [100 100 900 400], 'NumberTitle', 'off');
+figh = figure(1000);
+set(figh, 'Name', 'Tuning consistency analysis', 'Position', [100 100 900 400], 'NumberTitle', 'off');
 ha = subplot(1, 2, 1);
 set(ha, 'Position', [0.07 0.1 0.41 0.83]);
 tuningConsistencyPlot(handles);
@@ -1786,7 +1791,8 @@ params = handles.sorts(handles.activeEpoch).PCAEllipses.params;
 uniqueUnits = unique(handles.unitsShown);
 uniqueUnits(uniqueUnits > handles.maxUnits) = [];
 if ~isempty(uniqueUnits)
-  hf = figure('Name', '3-D PCA View', 'NumberTitle', 'off');
+  hf = figure(1001);
+  set(hf, 'Name', '3-D PCA View', 'NumberTitle', 'off');
   hold on;
 
   % For each unit, plot points and ellipsoids
@@ -1796,7 +1802,7 @@ if ~isempty(uniqueUnits)
     plot3(handles.PCAShown(1, isUnit), handles.PCAShown(2, isUnit), handles.PCAShown(3, isUnit), '.', 'color', handles.sortColors(unit+1, :), 'MarkerSize', 6);
     % Ellipsoids
     if ~isempty(params(unit+1).ellipses)
-      colormap(handles.sortColors(1:uniqueUnits(end)+1, :));
+      colormap(handles.sortColors(1:uniqueUnits(end)+1, 1:3));
       for e = 1:size(params(unit+1).ellipses, 1)
         ell = params(unit+1).ellipses(e, :);
         nDims = length(ell) / 2;
@@ -2484,7 +2490,8 @@ activateAxes(gcbf, handles.axTroughDepthHist);
 cla;
 hold on;
 uniqueUnits = unique(handles.waveforms.units);
-uniqueUnits = uniqueUnits(uniqueUnits ~= 0 & uniqueUnits <= handles.maxUnits);
+% uniqueUnits = uniqueUnits(uniqueUnits ~= 0 & uniqueUnits <= handles.maxUnits);
+uniqueUnts = uniqueUnits(uniqueUnits <= handles.maxUnits);
 
 if isempty(uniqueUnits)
   cla;
@@ -2526,7 +2533,7 @@ w = handles.waveforms;
 goodTrials = ~isnan(w.trialInfo.trial);    % Which spikes are in usable trials (1 x nSpikes)
 trialLengths = w.trialInfo.trialEndTimes - w.trialInfo.trialStartTimes;  % Length of each trial (1 x nTrials)
 unitsDefined = allDefinedUnits(handles);
-unitsDefined(unitsDefined == 0) = [];      % Exclude explicit zero-unit if relevant
+% unitsDefined(unitsDefined == 0) = [];      % Exclude explicit zero-unit if relevant
 for unit = unitsDefined
   thisUnit = (w.units == unit);            % Which spikes are in this unit (1 x nSpikes)
   goodEnough = goodTrials & thisUnit;      % Which spikes are in this unit and in good trials (1 x nSpikes)
@@ -2613,7 +2620,7 @@ if isempty(uniqueConds)
 end
 
 unitsDefined = allDefinedUnits(handles);
-unitsDefined(unitsDefined == 0) = [];      % Exclude explicit zero-unit if relevant
+% unitsDefined(unitsDefined == 0) = [];      % Exclude explicit zero-unit if relevant
 maxT = [];
 FRs = {};
 for unit = unitsDefined
@@ -2623,16 +2630,20 @@ for unit = unitsDefined
   spikesPerTrial = histc(trials, uniqueTrials);    % How many goodEnough spikes from this unit occurred in each trial
   theseTrialLengths = trialLengths(uniqueTrials);  % Length of each good trial
 
-  FRs{unit} = spikesPerTrial * 1000 ./ theseTrialLengths;
+  FRs{unit+1} = spikesPerTrial * 1000 ./ theseTrialLengths;
   
   % Pull out trace for each condition, box filter with a boxcar length
   % smoothKernel, and plot
   for cond = uniqueConds
     condTrials = (conditions == cond);
     try
-      FRCumSum = [0 cumsum(FRs{unit}(condTrials))];
+      FRCumSum = [0 cumsum(FRs{unit+1}(condTrials))];
       theseTrials = uniqueTrials(condTrials);
-      color = handles.sortColors(unit+1, 1:3) - colorRand/2 * [1 1 1] + colorRand * rand(1, 3);
+      if unit > 0
+          color = handles.sortColors(unit+1, 1:3) - colorRand/2 * [1 1 1] + colorRand * rand(1, 3);
+      else
+          color = handles.sortColors(unit+1, 1:3);
+      end
       color = max(min(color, [1 1 1]), [0 0 0]);
       kern = min(smoothKernel, length(FRCumSum)-1);
       plot(theseTrials(1:end-kern+1), (FRCumSum(kern+1:end) - FRCumSum(1:end-kern))/kern, 'color', color);
@@ -2645,7 +2656,7 @@ end
 for unit = unitsDefined
   kernel = ceil(length(uniqueTrials) / meanSmoothKernelPts);
   try
-    FRCumSum = [0 cumsum(FRs{unit})];
+    FRCumSum = [0 cumsum(FRs{unit+1})];
     color = handles.sortColors(unit+1, :) * 0.7;
     color = max(min(color, [1 1 1]), [0 0 0]);
     plot(uniqueTrials(1:end-kernel+1), (FRCumSum(kernel+1:end) - FRCumSum(1:end-kernel))/kernel, 'color', color, 'LineWidth', 2);
@@ -2975,8 +2986,8 @@ switch view
     % colormap(gray(max(handles.PCAPts(:))));
 
     % Show which dimensions are being displayed
-    maxDispX = cx + zoomFactor * rx / 1.07;
-    maxDispY = cy + zoomFactor * ry / 1.07;
+    maxDispX = double(cx + zoomFactor * rx / 1.07);
+    maxDispY = double(cy + zoomFactor * ry / 1.07);
     text(maxDispX, maxDispY, sprintf('%d\n+ %d', handles.PCADimsShown(2), handles.PCADimsShown(1)));
 end
 
@@ -3059,7 +3070,7 @@ plotAutocorrsInAxes(handles.sortInfo.autocorrs, nAutocorrs, handles.maxUnits, ha
 
 function handles = TemplateInit(handles)
 % Init function for Template sort type
-handles.sorts.Template.params(1).hoopHs = [];
+handles.sorts.Template.params(1).hoopHs = gobjects(0, 1);
 handles.sorts.Template.params(1).hoops = [];
 handles.sorts.Template.params(1).inTemplate = [];
 handles.sorts.Template.params(1).outTemplate = [];
@@ -3075,6 +3086,7 @@ handles.sorts.Template.unitsDefined = [];
 
 function handles = clearUnitTemplate(handles)
 % Handles clearing sort objects when a unit is cleared for the Template
+
 % sort type.
 % All params fields get cleared in the parent clearUnit, so all we actually
 % need to do is delete the hoop objects and remove them from sortObjects
@@ -3086,7 +3098,10 @@ handles = clearDragHs(handles);
 if length(handles.sorts(handles.activeEpoch).Template.params) > unit
   hhs = handles.sorts(handles.activeEpoch).Template.params(unit+1).hoopHs;
   for h = hhs
-    delete(h);
+      try
+        delete(h);
+      catch
+      end
   end
   handles.sortObjects(ismember(handles.sortObjects, hhs)) = [];
 end
@@ -3115,7 +3130,7 @@ params = handles.sorts(handles.activeEpoch).Template.params;
 for u = 1:length(params)
   % Clear old hoops
   handles.sorts(handles.activeEpoch).Template.params(u).hoops = [];
-  handles.sorts(handles.activeEpoch).Template.params(u).hoopHs = [];
+  handles.sorts(handles.activeEpoch).Template.params(u).hoopHs = gobjects(0, 1);
 
   handles.activeUnit = u-1;
 
@@ -3188,7 +3203,7 @@ params = handles.sorts(handles.activeEpoch).PCAEllipses.params;
 for u = 1:length(params)
   % Clear old ellipses
   handles.sorts(handles.activeEpoch).PCAEllipses.params(u).ellipses = [];
-  handles.sorts(handles.activeEpoch).PCAEllipses.params(u).ellipseHs = [];
+  handles.sorts(handles.activeEpoch).PCAEllipses.params(u).ellipseHs = gobjects(0, 1);
 
   handles.activeUnit = u-1;
 

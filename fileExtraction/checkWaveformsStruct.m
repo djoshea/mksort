@@ -29,7 +29,7 @@ ratingsFields = {'ratings', 'epoch'};
 % Note that below trialInfo is intentionally omitted. If new fields are
 % added to check, trialInfo should still come at the end. This is because
 % it can be either a struct or [], so it's trickier to test for.
-fieldClasses = {'double', 'double', 'double', 'double', 'char', ...
+fieldClasses = {'double', 'double', {'double', 'single'}, {'double', 'single'}, 'char', ...
   'double', 'double', 'double', 'struct'};
 ratingsClasses = {'double', 'double'};
 
@@ -49,10 +49,15 @@ end
 
 % Check for class
 for f = 1:length(fieldClasses)
-  if ~strcmp(class(w.(requiredFields{f})), fieldClasses{f})
-    uiwait(msgbox(sprintf('Field .%s is of incorrect class. Should be %s.', requiredFields{f}, fieldClasses{f})));
-    error('checkWaveformsStruct:badFieldClass', 'Bad waveforms file');
-  end
+    if iscell(fieldClasses{f})
+        if ~ismember(class(w.(requiredFields{f})), fieldClasses{f})
+            uiwait(msgbox(sprintf('Field .%s is of incorrect class', requiredFields{f})));
+            error('checkWaveformsStruct:badFieldClass', 'Bad waveforms file');
+        end
+    elseif ~strcmp(class(w.(requiredFields{f})), fieldClasses{f})
+        uiwait(msgbox(sprintf('Field .%s is of incorrect class. Should be %s.', requiredFields{f}, fieldClasses{f})));
+        error('checkWaveformsStruct:badFieldClass', 'Bad waveforms file');
+    end
 end
 
 
