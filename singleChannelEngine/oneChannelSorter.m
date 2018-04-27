@@ -524,7 +524,7 @@ handles.sortColors = [0.5 0.5 0.5;
                       1 0.2 0.2;
                       0.2 1 0.2;
                       0.5 0.2 0.5];
-handles.sortColors(:, 4) = 0.25; % @djoshea
+handles.sortColors(:, 4) = 1; % @djoshea
 
 % Color of unit highlight box
 handles.selectColor = [0.7 0.2 0];
@@ -648,8 +648,8 @@ handles.sortEpochRectHs = rectangle('Position', [1 0 handles.sorts.epochEnd 1], 
 % Set up time slider
 nWaves = size(handles.waveforms.waves, 2);
 nWavesShown = str2double(get(handles.txtNWaves, 'String'));
-set(handles.sldTime, 'Max', nWavesShown-1);
-%set(handles.sldTime, 'Max', nWaves - nWavesShown + 1);
+%set(handles.sldTime, 'Max', nWavesShown-1);
+set(handles.sldTime, 'Max', nWaves - nWavesShown + 1);
 set(handles.sldTime, 'Value', 1);
 set(handles.sldTime, 'Min', 1);
 % IJM: Changed from min("", 1) below. Caused broken slider when 
